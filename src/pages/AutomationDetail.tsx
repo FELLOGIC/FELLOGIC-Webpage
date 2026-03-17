@@ -4,18 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Upload, Info, Zap } from "lucide-react";
-import { useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const automationData: Record<string, { title: string; description: string; inputType: string; platform: string; details: string }> = {
   "create-user": {
     title: "Create User",
-    description: "Provision a new user account across Planview, ServiceNow, and Active Directory.",
+    description: "Launch an Ansible job to create a Planview user from the details below.",
     inputType: "Form",
-    platform: "Cross-Platform",
-    details: "This automation creates a user across all connected systems. It provisions AD accounts, assigns Planview licenses, and creates ServiceNow records with the appropriate role assignments.",
+    platform: "Ansible/AWX",
+    details: "This form launches the Create User Ansible job template with your server, service account, and user creation details.",
   },
   "bulk-upload": {
     title: "Bulk User Upload",
@@ -26,11 +26,53 @@ const automationData: Record<string, { title: string; description: string; input
   },
 };
 
+type CreateUserFormData = {
+  companyDomainUrl: string;
+  datasource: string;
+  serviceAccountUserId: string;
+  serviceAccountPassword: string;
+  userId: string;
+  fullName: string;
+  userRole: string;
+};
+
+const defaultCreateUserForm: CreateUserFormData = {
+  companyDomainUrl: "",
+  datasource: "",
+  serviceAccountUserId: "",
+  serviceAccountPassword: "",
+  userId: "",
+  fullName: "",
+  userRole: "",
+};
+
+const SAVED_SERVICE_ACCOUNT_KEY = "create-user-service-account";
+
 const AutomationDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [dragOver, setDragOver] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [saveServiceAccount, setSaveServiceAccount] = useState(false);
+  const [formData, setFormData] = useState<CreateUserFormData>(defaultCreateUserForm);
+
+  const isCreateUser = id === "create-user";
+
+  useEffect(() => {
+    if (!isCreateUser) return;
+
+    const raw = window.localStorage.getItem(SAVED_SERVICE_ACCOUNT_KEY);
+    if (!raw) return;
+
+    const saved = JSON.parse(raw) as { serviceAccountUserId?: string; serviceAccountPassword?: string };
+    setFormData((prev) => ({
+      ...prev,
+      serviceAccountUserId: saved.serviceAccountUserId || "",
+      serviceAccountPassword: saved.serviceAccountPassword || "",
+    }));
+    setSaveServiceAccount(true);
+  }, [isCreateUser]);
 
   const auto = automationData[id || ""] || {
     title: "Automation",
@@ -40,9 +82,68 @@ const AutomationDetail = () => {
     details: "Fill in the required parameters and submit to queue this automation job. You'll be able to track its progress in the Jobs page.",
   };
 
-  const handleSubmit = () => {
-    toast({ title: "Job Submitted", description: "Your automation job has been queued for execution." });
-    navigate("/jobs/JOB-1248");
+  const handleCreateUserSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const endpoint = import.meta.env.VITE_ANSIBLE_JOB_URL || "/api/ansible/jobs/create-user";
+
+      const payload = {
+        template: "create-user",
+        parameters: {
+          server_details: {
+            company_domain_url: formData.companyDomainUrl,
+            datasource: formData.datasource,
+          },
+          service_account: {
+            user_id: formData.serviceAccountUserId,
+            password: formData.serviceAccountPassword,
+          },
+          creation_details: {
+            user_id: formData.userId,
+            full_name: formData.fullName,
+            user_role: formData.userRole,
+          },
+        },
+      };
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to submit Ansible job (${response.status})`);
+      }
+
+      const result = (await response.json()) as { job_id?: string };
+
+      if (saveServiceAccount) {
+        window.localStorage.setItem(
+          SAVED_SERVICE_ACCOUNT_KEY,
+          JSON.stringify({
+            serviceAccountUserId: formData.serviceAccountUserId,
+            serviceAccountPassword: formData.serviceAccountPassword,
+          }),
+        );
+      } else {
+        window.localStorage.removeItem(SAVED_SERVICE_ACCOUNT_KEY);
+      }
+
+      const jobId = result.job_id || "JOB-1248";
+      toast({ title: "Ansible Job Submitted", description: `Create User job queued as ${jobId}.` });
+      navigate(`/jobs/${jobId}`);
+    } catch (error) {
+      toast({
+        title: "Submission Failed",
+        description: error instanceof Error ? error.message : "Unable to submit Ansible job.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -63,7 +164,6 @@ const AutomationDetail = () => {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Form */}
         <div className="lg:col-span-2 space-y-4">
           <Card className="bg-card border-border">
             <CardHeader className="pb-4">
@@ -75,7 +175,10 @@ const AutomationDetail = () => {
                   className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
                     dragOver ? "border-primary bg-primary/5" : "border-border"
                   }`}
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOver(true);
+                  }}
                   onDragLeave={() => setDragOver(false)}
                   onDrop={() => setDragOver(false)}
                 >
@@ -84,46 +187,113 @@ const AutomationDetail = () => {
                   <p className="text-xs text-muted-foreground">Accepts .csv, .xlsx — max 10MB</p>
                   <Button variant="outline" size="sm" className="mt-4">Choose File</Button>
                 </div>
-              ) : (
-                <>
-                  <div className="grid md:grid-cols-2 gap-4">
+              ) : isCreateUser ? (
+                <form className="space-y-5" onSubmit={handleCreateUserSubmit}>
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">Server Details</p>
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">First Name *</Label>
-                      <Input placeholder="Enter first name" className="bg-secondary" />
+                      <Label className="text-xs text-muted-foreground">Company Domain URL *</Label>
+                      <Input
+                        required
+                        placeholder="eg. https://tetrapak.pvcloud.com"
+                        className="bg-secondary"
+                        value={formData.companyDomainUrl}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, companyDomainUrl: e.target.value }))}
+                      />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Last Name *</Label>
-                      <Input placeholder="Enter last name" className="bg-secondary" />
+                      <Label className="text-xs text-muted-foreground">Datasource *</Label>
+                      <Input
+                        required
+                        placeholder="eg. TETSANDBOX"
+                        className="bg-secondary"
+                        value={formData.datasource}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, datasource: e.target.value }))}
+                      />
                     </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Email *</Label>
-                    <Input type="email" placeholder="user@company.com" className="bg-secondary" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Department</Label>
-                    <Input placeholder="e.g. Engineering" className="bg-secondary" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Notes</Label>
-                    <Textarea placeholder="Additional context for this automation…" className="bg-secondary resize-none" rows={3} />
-                  </div>
-                </>
-              )}
 
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                <Info className="h-4 w-4 text-primary shrink-0" />
-                <p className="text-xs text-muted-foreground">All inputs are validated before submission. Jobs are queued and executed via the Ansible/AWX backend.</p>
-              </div>
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">Service Account</p>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">User ID *</Label>
+                      <Input
+                        required
+                        className="bg-secondary"
+                        value={formData.serviceAccountUserId}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, serviceAccountUserId: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Password *</Label>
+                      <Input
+                        required
+                        type="password"
+                        className="bg-secondary"
+                        value={formData.serviceAccountPassword}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, serviceAccountPassword: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="save-service-account"
+                        checked={saveServiceAccount}
+                        onCheckedChange={(checked) => setSaveServiceAccount(checked === true)}
+                      />
+                      <Label htmlFor="save-service-account" className="text-xs text-muted-foreground font-normal">
+                        Save service account for later
+                      </Label>
+                    </div>
+                  </div>
 
-              <Button className="w-full h-11" onClick={handleSubmit}>
-                <Zap className="h-4 w-4 mr-2" /> Submit Job
-              </Button>
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">Creation Details</p>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">User ID *</Label>
+                      <Input
+                        required
+                        className="bg-secondary"
+                        value={formData.userId}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, userId: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Full Name *</Label>
+                      <Input
+                        required
+                        className="bg-secondary"
+                        value={formData.fullName}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, fullName: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">User Role *</Label>
+                      <Input
+                        required
+                        placeholder="e.g. Resource Manager"
+                        className="bg-secondary"
+                        value={formData.userRole}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, userRole: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <Info className="h-4 w-4 text-primary shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      Submit Job sends these parameters directly to the configured Ansible endpoint.
+                    </p>
+                  </div>
+
+                  <Button className="w-full h-11" type="submit" disabled={isSubmitting}>
+                    <Zap className="h-4 w-4 mr-2" /> {isSubmitting ? "Submitting..." : "Submit Job"}
+                  </Button>
+                </form>
+              ) : null}
             </CardContent>
           </Card>
         </div>
 
-        {/* Sidebar info */}
         <div className="space-y-4">
           <Card className="bg-card border-border">
             <CardHeader className="pb-3">
