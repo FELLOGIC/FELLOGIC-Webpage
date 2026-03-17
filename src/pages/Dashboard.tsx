@@ -4,7 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
-const stats = [
+type DashboardStat = { label: string; value: number; icon: typeof Activity; className: string };
+
+const stats: DashboardStat[] = [
   { label: "Running", value: 3, icon: Activity, className: "status-running" },
   { label: "Completed", value: 47, icon: CheckCircle2, className: "status-completed" },
   { label: "Failed", value: 2, icon: XCircle, className: "status-failed" },
@@ -46,7 +48,10 @@ const stats = [
        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
          {stats.map((s) => (
 
-const recentJobs = [
+type JobStatus = "Running" | "Completed" | "Failed" | "Queued";
+type RecentJob = { id: string; name: string; status: JobStatus; time: string; user: string };
+
+const recentJobs: RecentJob[] = [
   { id: "JOB-1247", name: "Bulk User Upload", status: "Running", time: "2 min ago", user: "F. Levy" },
   { id: "JOB-1246", name: "Planview Job Stream Report", status: "Completed", time: "15 min ago", user: "F. Levy" },
   { id: "JOB-1245", name: "Create User", status: "Completed", time: "1 hr ago", user: "S. Chen" },
@@ -60,7 +65,7 @@ const quickAutomations = [
   { name: "Planview Report", type: "Form" },
 ];
 
-const statusClasses: Record<string, string> = {
+const statusClasses: Record<JobStatus, string> = {
   Running: "status-running",
   Completed: "status-completed",
   Failed: "status-failed",
