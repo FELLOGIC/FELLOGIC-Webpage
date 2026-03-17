@@ -42,9 +42,43 @@ const stats = [
         <p className="text-muted-foreground text-sm mt-1">A quick overview of your automation activity.</p>
        </div>
  
- {/* Stats */}
- <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-   {stats.map((stat) => (
+       {/* Stats */}
+       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+         {stats.map((s) => (
+
+const recentJobs = [
+  { id: "JOB-1247", name: "Bulk User Upload", status: "Running", time: "2 min ago", user: "F. Levy" },
+  { id: "JOB-1246", name: "Planview Job Stream Report", status: "Completed", time: "15 min ago", user: "F. Levy" },
+  { id: "JOB-1245", name: "Create User", status: "Completed", time: "1 hr ago", user: "S. Chen" },
+  { id: "JOB-1244", name: "Portfolio Report", status: "Failed", time: "2 hr ago", user: "F. Levy" },
+  { id: "JOB-1243", name: "Update User", status: "Completed", time: "3 hr ago", user: "A. Park" },
+];
+
+const quickAutomations = [
+  { name: "Create User", type: "Form" },
+  { name: "Bulk User Upload", type: "File Upload" },
+  { name: "Planview Report", type: "Form" },
+];
+
+const statusClasses: Record<string, string> = {
+  Running: "status-running",
+  Completed: "status-completed",
+  Failed: "status-failed",
+  Queued: "status-queued",
+};
+
+const Dashboard = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="space-y-5 max-w-6xl">
+      <div>
+        <h1 className="text-xl font-medium">Welcome back, Fabrice</h1>
+        <p className="text-muted-foreground text-sm mt-1">A quick overview of your automation activity.</p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat) => (
           <Card key={stat.label} className="border-border/70 shadow-none">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-3">
