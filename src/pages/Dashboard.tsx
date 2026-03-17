@@ -4,7 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
-const stats = [
+type JobStatus = "Running" | "Completed" | "Failed" | "Queued";
+
+type DashboardStat = {
+  label: string;
+  value: number;
+  icon: typeof Activity;
+  className: string;
+};
+
+const stats: DashboardStat[] = [
   { label: "Running", value: 3, icon: Activity, className: "status-running" },
   { label: "Completed", value: 47, icon: CheckCircle2, className: "status-completed" },
   { label: "Failed", value: 2, icon: XCircle, className: "status-failed" },
