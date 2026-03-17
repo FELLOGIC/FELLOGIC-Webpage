@@ -127,7 +127,5 @@ const stats: DashboardStat[] = [
      </div>
    );
  };
- 
-import { quickAutomations, recentJobs, stats, statusClasses } from "./dashboardData";
 
 export default Dashboard;
