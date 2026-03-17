@@ -42,35 +42,41 @@ const stats = [
         <p className="text-muted-foreground text-sm mt-1">A quick overview of your automation activity.</p>
        </div>
  
- {/* Stats */}
- <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-   {stats.map((stat) => (
-     <Card key={stat.label} className="border-border/70 shadow-none">
-       <CardContent className="p-5">
-         <div className="flex items-center justify-between mb-3">
-           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</span>
-           <div className={`h-8 w-8 rounded-lg flex items-center justify-center border ${stat.className}`}>
-             <stat.icon className="h-4 w-4" />
-           </div>
-         </div>
-         <p className="text-2xl font-semibold">{stat.value}</p>
-       </CardContent>
-     </Card>
-   ))}
- </div>
+       {/* Stats */}
+       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+const recentJobs = [
+  { id: "JOB-1247", name: "Bulk User Upload", status: "Running", time: "2 min ago", user: "F. Levy" },
+  { id: "JOB-1246", name: "Planview Job Stream Report", status: "Completed", time: "15 min ago", user: "F. Levy" },
+  { id: "JOB-1245", name: "Create User", status: "Completed", time: "1 hr ago", user: "S. Chen" },
+  { id: "JOB-1244", name: "Portfolio Report", status: "Failed", time: "2 hr ago", user: "F. Levy" },
+  { id: "JOB-1243", name: "Update User", status: "Completed", time: "3 hr ago", user: "A. Park" },
+];
 
- {/* Recent Jobs & Quick Launch */}
- <div className="grid lg:grid-cols-3 gap-6">
-   <Card className="lg:col-span-2 border-border/70 shadow-none">
-     <CardHeader className="flex flex-row items-center justify-between pb-4">
-       <CardTitle className="text-base font-medium">Recent Jobs</CardTitle>
-       <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => navigate("/jobs")}>
-         View All <ArrowRight className="ml-1 h-3 w-3" />
-       </Button>
-     </CardHeader>
-     <CardContent>
-       <div className="space-y-1">
-         {recentJobs.map((job) => (
+const quickAutomations = [
+  { name: "Create User", type: "Form" },
+  { name: "Bulk User Upload", type: "File Upload" },
+  { name: "Planview Report", type: "Form" },
+];
+
+const statusClasses: Record<string, string> = {
+  Running: "status-running",
+  Completed: "status-completed",
+  Failed: "status-failed",
+  Queued: "status-queued",
+};
+
+const Dashboard = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="space-y-5 max-w-6xl">
+      <div>
+        <h1 className="text-xl font-medium">Welcome back, Fabrice</h1>
+        <p className="text-muted-foreground text-sm mt-1">A quick overview of your automation activity.</p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat) => (
           <Card key={stat.label} className="border-border/70 shadow-none">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-3">
