@@ -24,7 +24,7 @@ const stats: DashboardStat[] = [
    { id: "JOB-1246", name: "Planview Job Stream Report", status: "Completed", time: "15 min ago", user: "F. Levy" },
    { id: "JOB-1245", name: "Create User", status: "Completed", time: "1 hr ago", user: "S. Chen" },
    { id: "JOB-1244", name: "Portfolio Report", status: "Failed", time: "2 hr ago", user: "F. Levy" },
-   { id: "JOB-1243", name: "Update User", status: "Completed", time: "3 hr ago", user: "A. Park" },
+   { id: "JOB-12243", name: "Update User", status: "Completed", time: "3 hr ago", user: "A. Park" },
  ];
  
  const quickAutomations = [
