@@ -201,8 +201,8 @@ const Dashboard = () => {
             </Button>
           </CardContent>
         </Card>
-      </div>
-    </div>
+      </motion.div>
+    </main>
   );
 };
 

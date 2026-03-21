@@ -1,8 +1,0 @@
----
-- name: Deploy site
-  hosts: web
-  gather_facts: false
-  tasks:
-    - name: MVP placeholder deploy step
-      ansible.builtin.debug:
-        msg: "Running deploy-site.yml with extra vars: {{ vars }}"
