@@ -1,4 +1,4 @@
-import { LayoutDashboard, Zap, ListChecks, FileText, Shield, Settings } from "lucide-react";
+import { LayoutDashboard, Zap, ListChecks, FileText, Shield, Settings, Workflow } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import FellogicLogo from "@/components/FellogicLogo";
@@ -19,6 +19,7 @@ import {
 const mainNav = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Automations", url: "/automations", icon: Zap },
+  { title: "Flow Designer", url: "/flow-designer", icon: Workflow },
   { title: "Jobs", url: "/jobs", icon: ListChecks },
   { title: "Logs", url: "/logs", icon: FileText },
 ];

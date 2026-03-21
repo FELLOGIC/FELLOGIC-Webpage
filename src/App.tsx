@@ -8,6 +8,7 @@ import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import AutomationCatalog from "./pages/AutomationCatalog";
 import AutomationDetail from "./pages/AutomationDetail";
+import FlowDesigner from "./pages/FlowDesigner";
 import JobsPage from "./pages/JobsPage";
 import JobStatus from "./pages/JobStatus";
 import LogsResults from "./pages/LogsResults";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/automations" element={<AutomationCatalog />} />
             <Route path="/automations/:id" element={<AutomationDetail />} />
+            <Route path="/flow-designer" element={<FlowDesigner />} />
             <Route path="/jobs" element={<JobsPage />} />
             <Route path="/jobs/:jobId" element={<JobStatus />} />
             <Route path="/logs" element={<LogsResults />} />
